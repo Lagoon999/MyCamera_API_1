@@ -5,10 +5,12 @@ import android.content.Intent;
 import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.net.Uri;
+import android.nfc.Tag;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -34,12 +36,11 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-            if (camera != null)
-            {
+            if (camera != null) {
                 camera.stopPreview();
                 if (holder != null) {
                     startPreview();
-                    }
+                }
             }
         }
 
@@ -66,38 +67,49 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Camera.Parameters parameters = camera.getParameters();
                 parameters.setPictureFormat(ImageFormat.JPEG);
-                parameters.setPictureSize(3000,4000);
+                parameters.setPictureSize(3000, 4000);
                 parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
-                camera.autoFocus(new Camera.AutoFocusCallback(){
+                camera.autoFocus(new Camera.AutoFocusCallback() {
                     @Override
-                    public void onAutoFocus(boolean sucess, Camera camera){
-                        if(sucess){
-                            camera.takePicture(null, null, new Camera.PictureCallback() {
-                                @Override
-                                public void onPictureTaken(byte[] data, Camera camera) {
-                                    String path = "";
-                                    if ((path = saveFile(data)) != null) {
-                                        Intent it = new Intent(MainActivity.this, PreviewActivity.class);
-                                        it.putExtra("path", path);
-                                        startActivity(it);
-                                    } else {
-                                        Toast.makeText(MainActivity.this, "保存照片失败", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                            });
-
+                    public void onAutoFocus(boolean sucess, Camera camera) {
+                        if (sucess) {
+                            camera.takePicture(null, null, mPictureCallback);
                         }
                     }
-                });
 
+                });
             }
         });
     }
 
+    private Camera.PictureCallback mPictureCallback = new Camera.PictureCallback() {
+        @Override
+        public void onPictureTaken(byte[] data, Camera camera) {
+            String mFilePath = null;
+            mFilePath = mFilePath + "/" + System.currentTimeMillis() + ".png";
+            File tempFile = new File(mFilePath);
+            try {
+                if (tempFile != null) {
+                    FileOutputStream fos = new FileOutputStream(tempFile);
+                    fos.write(data);
+                    fos.close();
+                    Intent intent = new Intent(MainActivity.this, PreviewActivity.class); // 传给下一个显示照片的activity
+                    intent.putExtra("picPath", tempFile.getAbsolutePath());
+                    startActivity(intent);
+                    finish();
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
     //保存临时文件的方法
-    private String saveFile(byte[] bytes){
+    private String saveFile(byte[] bytes) {
         try {
-            File file = File.createTempFile("img","");
+            File file = File.createTempFile("img", "");
             FileOutputStream fos = new FileOutputStream(file);
             fos.write(bytes);
             fos.flush();
@@ -132,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     //开始预览
-    private void startPreview(){
+    private void startPreview() {
         camera = Camera.open();
         try {
             camera.setPreviewDisplay(sfv_preview.getHolder());
@@ -151,5 +163,4 @@ public class MainActivity extends AppCompatActivity {
         camera.release();
         camera = null;
     }
-
 }
