@@ -37,8 +37,8 @@ public class MainActivity extends Activity {
     private SurfaceHolder holder;
     private ImageView imageView;
     private LinearLayout ll_view;
-    int picWidth = 1920;
-    int picHeight = 1080;
+    int picWidth = 4000;
+    int picHeight = 3000;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -331,7 +331,7 @@ public class MainActivity extends Activity {
             Iterator<Camera.Size> itor = sizeList.iterator();
             while (itor.hasNext()) {
                 Camera.Size cur = itor.next();
-                if (cur.width <= 1920 && cur.height <= 1280) {
+                if (cur.width <= 4000 && cur.height <= 3000) {
                     picWidth = cur.width;
                     picHeight = cur.height;
                     isExt=true;
