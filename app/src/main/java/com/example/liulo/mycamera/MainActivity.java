@@ -8,6 +8,7 @@ import java.util.List;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -55,6 +56,16 @@ public class MainActivity extends Activity {
 
         //holder.setFixedSize(1080, 1920);
         holder.addCallback(new SurfaceViewCallback());
+
+        imageView.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this,PreviewActivity.class);
+                // 传递路径
+                intent.putExtra("path", currentImageFile.getAbsolutePath());
+                startActivity(intent);
+            }
+        });
 
         takephoto.setOnClickListener(new OnClickListener() {
             @Override
@@ -186,13 +197,31 @@ public class MainActivity extends Activity {
     }
 
     // 创建jpeg图片回调数据对象
+    private File currentImageFile = null;
     PictureCallback jpeg = new PictureCallback() {
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
             // TODO Auto-generated method stub
+            String path = "/mnt/sdcard/";
+            try{
+                currentImageFile = new File(path,System.currentTimeMillis() + ".jpg");
+                FileOutputStream fos = new FileOutputStream(currentImageFile);
+                if(!currentImageFile.exists()){
+                    try {
+                        currentImageFile.createNewFile();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                fos.write(data);
+                fos.flush();
+                fos.close();
+            }catch(IOException e)
+            {
+                e.printStackTrace();
+            }
             try {
                 Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-                saveBitmap("/mnt/sdcard/Ad/1.jpg", bitmap);
                 imageView.setImageBitmap(bitmap);
                 camera.stopPreview();// 关闭预览 处理数据
                 camera.startPreview();// 数据处理完后继续开始预览
